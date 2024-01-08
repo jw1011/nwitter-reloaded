@@ -1,8 +1,10 @@
-import { styled } from "styled-components";
+import styled from "styled-components";
 import { ITweet } from "./timeline";
 import { auth, db, storage } from "../firebase";
 import { deleteDoc, doc } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
+import EditTweetDialog from "./edit-tweet-dialog";
+import { useState } from "react";
 
 const Wrapper = styled.div`
   display: grid;
@@ -11,13 +13,11 @@ const Wrapper = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 15px;
 `;
-
 const Column = styled.div`
   &:last-child {
     place-self: end;
   }
 `;
-
 const Photo = styled.img`
   width: 100px;
   height: 100px;
@@ -31,7 +31,6 @@ const Payload = styled.p`
   margin: 10px 0px;
   font-size: 18px;
 `;
-
 const DeleteButton = styled.button`
   background-color: tomato;
   color: white;
@@ -43,12 +42,30 @@ const DeleteButton = styled.button`
   border-radius: 5px;
   cursor: pointer;
 `;
+const EditButton = styled.button`
+  background-color: #1d9bf0;
+  color: white;
+  font-weight: 600;
+  border: 0;
+  font-size: 12px;
+  padding: 5px 10px;
+  text-transform: uppercase;
+  border-radius: 5px;
+  cursor: pointer;
+`;
 
-export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
+export default function Tweet(tweetProps: ITweet) {
+  const [edit, setEdit] = useState(false);
+  const { username, photo, tweet, userId, id } = tweetProps;
   const user = auth.currentUser;
   const onDelete = async () => {
+    if (user?.uid !== userId) {
+      return;
+    }
     const ok = confirm("Are you sure you want to delete this tweet?");
-    if (!ok || user?.uid !== userId) return;
+    if (!ok) {
+      return;
+    }
     try {
       await deleteDoc(doc(db, "tweets", id));
       if (photo) {
@@ -61,15 +78,27 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
       //
     }
   };
+  const onEdit = async () => {
+    setEdit(true);
+  };
+  const onCloseEdit = () => {
+    setEdit(false);
+  };
   return (
     <Wrapper>
       <Column>
         <Username>{username}</Username>
         <Payload>{tweet}</Payload>
         {user?.uid === userId ? (
-          <DeleteButton onClick={onDelete}>Delete</DeleteButton>
+          <>
+            <DeleteButton onClick={onDelete}>delete</DeleteButton>
+            <EditButton onClick={onEdit}>edit</EditButton>
+          </>
         ) : null}
       </Column>
+      {edit ? (
+        <EditTweetDialog onClose={onCloseEdit} tweet={tweetProps} />
+      ) : null}
       <Column>{photo ? <Photo src={photo} /> : null}</Column>
     </Wrapper>
   );
