@@ -56,7 +56,7 @@ const EditButton = styled.button`
 
 export default function Tweet(tweetProps: ITweet) {
   const [edit, setEdit] = useState(false);
-  const { username, photo, tweet, userId, id } = tweetProps;
+  const { userName, photo, tweet, userId, id } = tweetProps;
   const user = auth.currentUser;
   const onDelete = async () => {
     if (user?.uid !== userId) {
@@ -87,7 +87,7 @@ export default function Tweet(tweetProps: ITweet) {
   return (
     <Wrapper>
       <Column>
-        <Username>{username}</Username>
+        <Username>{userName}</Username>
         <Payload>{tweet}</Payload>
         {user?.uid === userId ? (
           <>
